@@ -1,0 +1,25 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  border: 3px solid #dfdfdf;
+  border-radius: 8px;
+  box-shadow: 3px 2px 10px #cfcfcf;
+  .row {
+    display: flex;
+    justify-content: center;
+    .cell {
+      margin-right: 4px;
+    }
+    .cell:last-of-type {
+      margin-right: 0;
+    }
+  }
+  .row {
+    margin-bottom: 4px;
+  }
+  .row:last-of-type {
+    margin-bottom: 0;
+  }
+}
