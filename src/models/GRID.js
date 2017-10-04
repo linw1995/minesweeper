@@ -27,6 +27,8 @@ export default {
     gridType: [], // number 0~9 for cellType.
     // 9 means mine, 0~8 means how many mine aroud
     gridStatus: [], // bool for cell showing or not
+    gridFlag: [], // bool for mark or not
+    flagCount: 0,
     height: 0,
     width: 0,
     minesCount: 0,
@@ -66,11 +68,16 @@ export default {
           count -= 1;
         }
       }
-      return { ...state, gridStatus, gridType, height, width, minesCount, status: 0, updatedAt, startedAt: 'null' };
+
+      const gridFlag = [];
+      for (let i = 0; i < len; i += 1) {
+        gridFlag[i] = false;
+      }
+      return { ...state, gridStatus, gridType, gridFlag, height, width, minesCount, status: 0, updatedAt, startedAt: 'null' };
     },
     CLICK_ON_LOC(state, action) {
       const { loc, updatedAt } = action.payload;
-      const { gridStatus, gridType, height, width, minesCount } = state;
+      const { gridStatus, gridType, gridFlag, height, width, minesCount } = state;
       let locs = [];
       let status = state.status;
       if (status === 1 || status === 2) {
@@ -83,17 +90,22 @@ export default {
         const loc = locs.pop();
         if (seen.has(loc)) { continue; }
         seen.add(loc);
-        if (gridType[loc] === 9) { // click the mine
+        if (gridType[loc] === 9 && !gridFlag[loc]) {
+          // click the mine, flaged cell is unclickable
           // show all the cell
           for (let i = 0; i < gridStatus.length; i += 1) {
             gridStatus[i] = true;
           }
           break;
-        } else if (gridType[loc] === 0) { // click the blank cell
+        } else if (gridType[loc] === 0 && !gridStatus[loc] && !gridFlag[loc]) {
+          // click the blank cell, flaged cell and shown cell is not spreadable
           const aroudLocs = getAroudLoc(loc, height, width);
           locs = locs.concat(...aroudLocs);
         }
-        gridStatus[loc] = true;
+        if (!gridFlag[loc]) {
+          // flaged cell is unclickable
+          gridStatus[loc] = true;
+        }
       }
       let counter = 0;
       gridStatus.forEach((status) => {
@@ -108,9 +120,36 @@ export default {
       }
 
       if (typeof state.startedAt === 'string') {
+        // game start
         return { ...state, gridStatus, updatedAt, status, startedAt: updatedAt };
       } else {
         return { ...state, gridStatus, updatedAt, status };
+      }
+    },
+    RIGHT_CLICK_ON_LOC(state, action) {
+      const { loc, updatedAt } = action.payload;
+      const { gridStatus, minesCount, status } = state;
+      if (status === 1 || status === 2) {
+        // when win or lose diasble the cell clickable
+        return state;
+      }
+      const gridFlag = [...state.gridFlag];
+      if (gridStatus[loc]) {
+        return state;
+      }
+      gridFlag[loc] = !gridFlag[loc];
+      let flagCount = 0;
+      gridFlag.forEach((v) => {
+        if (v) flagCount += 1;
+      });
+      if (flagCount > minesCount) {
+        return state;
+      }
+      if (typeof state.startedAt === 'string') {
+        // game start
+        return { ...state, gridFlag, flagCount, updatedAt, startedAt: updatedAt };
+      } else {
+        return { ...state, gridFlag, flagCount, updatedAt };
       }
     },
   },

@@ -11,6 +11,7 @@ import sixIcon from '../assets/six.svg';
 import sevenIcon from '../assets/seven.svg';
 import eightIcon from '../assets/eight.svg';
 import mineIcon from '../assets/mine.svg';
+import flagIcon from '../assets/red-flag.svg';
 
 const cellIcons = [null, oneIcon, twoIcon, threeIcon, fourIcon, fiveIcon, sixIcon, sevenIcon, eightIcon, mineIcon];
 class Cell extends Component {
@@ -21,17 +22,20 @@ class Cell extends Component {
     cellClassName.push(styles.cell);
     className ? cellClassName.push(className) : null;
     shown ? cellClassName.push(styles.active) : null;
+
+    const flag = this.props.flag;
+
+    const onLeftClick = this.props.onLeftClick ? this.props.onLeftClick : (e) => { e.preventDefault(); };
+    const onRightClick = this.props.onRightClick ? this.props.onRightClick : (e) => { e.preventDefault(); };
     return (
       <div
         className={cellClassName.join(' ')}
         style={style}
-        onClick={!shown ? this.props.onClick : null}
+        onClick={onLeftClick}
+        onContextMenu={onRightClick}
       >
-        { cellIcon ?
-          <img
-            src={cellIcon}
-            className={styles.icon}
-          /> : null }
+        { cellIcon ? <img key="cellIcon" src={cellIcon} className={styles.icon} /> : null }
+        { flag ? <img key="flagIcon" src={flagIcon} className={styles.flag} /> : null }
       </div>
     );
   }
@@ -42,8 +46,10 @@ Cell.propTypes = {
   className: PropTypes.string,
   cellType: PropTypes.number,
   shown: PropTypes.bool,
+  flag: PropTypes.bool,
 
-  onClick: PropTypes.func,
+  onLeftClick: PropTypes.func,
+  onRightClick: PropTypes.func,
 };
 
 export default Cell;
