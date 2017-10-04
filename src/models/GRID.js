@@ -5,12 +5,40 @@ function randInt(min, max) {
 }
 
 function getAroudLoc(loc, height, width) {
+  /*
+  *  [ ][ ][ ]
+  *  [ ][X][ ]
+  *  [ ][ ][ ]
+  */
   const getloc = (x, y) => (x * width + y);
   const rv = [];
   const x = Math.floor(loc / width);
   const y = loc % width;
   for (const i of [-1, 0, 1]) {
     for (const j of [-1, 0, 1]) {
+      const _x = x + i;
+      const _y = y + j;
+      if (0 <= _x && _x < height && 0 <= _y && _y < width) {
+        rv.push(getloc(_x, _y));
+      }
+    }
+  }
+  return rv;
+}
+
+function getCrossLoc(loc, height, width) {
+  /*
+   *     [  ]
+   * [  ] X [  ]
+   *    [  ]
+   */
+  const getloc = (x, y) => (x * width + y);
+  const rv = [];
+  const x = Math.floor(loc / width);
+  const y = loc % width;
+  for (const i of [-1, 0, 1]) {
+    for (const j of [-1, 0, 1]) {
+      if (Math.abs(i) === Math.abs(j)) continue;
       const _x = x + i;
       const _y = y + j;
       if (0 <= _x && _x < height && 0 <= _y && _y < width) {
@@ -99,7 +127,7 @@ export default {
           break;
         } else if (gridType[loc] === 0 && !gridStatus[loc] && !gridFlag[loc]) {
           // click the blank cell, flaged cell and shown cell is not spreadable
-          const aroudLocs = getAroudLoc(loc, height, width);
+          const aroudLocs = getCrossLoc(loc, height, width);
           locs = locs.concat(...aroudLocs);
         }
         if (!gridFlag[loc]) {
