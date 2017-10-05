@@ -6,31 +6,9 @@ function randInt(min, max) {
 
 function getAroudLoc(loc, height, width) {
   /*
-  *  [ ][ ][ ]
-  *  [ ][X][ ]
-  *  [ ][ ][ ]
-  */
-  const getloc = (x, y) => (x * width + y);
-  const rv = [];
-  const x = Math.floor(loc / width);
-  const y = loc % width;
-  for (const i of [-1, 0, 1]) {
-    for (const j of [-1, 0, 1]) {
-      const _x = x + i;
-      const _y = y + j;
-      if (0 <= _x && _x < height && 0 <= _y && _y < width) {
-        rv.push(getloc(_x, _y));
-      }
-    }
-  }
-  return rv;
-}
-
-function getCrossLoc(loc, height, width) {
-  /*
-   *     [  ]
-   * [  ] X [  ]
-   *    [  ]
+   *  [ ][ ][ ]
+   *  [ ][X][ ]
+   *  [ ][ ][ ]
    */
   const getloc = (x, y) => (x * width + y);
   const rv = [];
@@ -38,7 +16,6 @@ function getCrossLoc(loc, height, width) {
   const y = loc % width;
   for (const i of [-1, 0, 1]) {
     for (const j of [-1, 0, 1]) {
-      if (Math.abs(i) === Math.abs(j)) continue;
       const _x = x + i;
       const _y = y + j;
       if (0 <= _x && _x < height && 0 <= _y && _y < width) {
@@ -127,7 +104,61 @@ export default {
           break;
         } else if (gridType[loc] === 0 && !gridStatus[loc] && !gridFlag[loc]) {
           // click the blank cell, flaged cell and shown cell is not spreadable
-          const aroudLocs = getCrossLoc(loc, height, width);
+          const aroudLocs = new Set();
+          const x = Math.floor(loc / width);
+          const y = loc % width;
+          // top
+          if (x - 1 >= 0) {
+            const aroudLoc = (x - 1) * width + y;
+            if (!gridStatus[aroudLoc]) {
+              aroudLocs.add(aroudLoc);
+              if (y - 1 >= 0) {
+                aroudLocs.add(aroudLoc - 1);
+              }
+              if (y + 1 < width) {
+                aroudLocs.add(aroudLoc + 1);
+              }
+            }
+          }
+          // left
+          if (y + 1 < width) {
+            const aroudLoc = x * width + y + 1;
+            if (!gridStatus[aroudLoc]) {
+              aroudLocs.add(aroudLoc);
+              if (x - 1 >= 0) {
+                aroudLocs.add(aroudLoc - width);
+              }
+              if (x + 1 < height) {
+                aroudLocs.add(aroudLoc + width);
+              }
+            }
+          }
+          // bottom
+          if (x + 1 < height) {
+            const aroudLoc = (x + 1) * width + y;
+            if (!gridStatus[aroudLoc]) {
+              aroudLocs.add(aroudLoc);
+              if (y - 1 >= 0) {
+                aroudLocs.add(aroudLoc - 1);
+              }
+              if (y + 1 < width) {
+                aroudLocs.add(aroudLoc + 1);
+              }
+            }
+          }
+          // left
+          if (y - 1 >= 0) {
+            const aroudLoc = x * width + y - 1;
+            if (!gridStatus[aroudLoc]) {
+              aroudLocs.add(aroudLoc);
+              if (x - 1 >= 0) {
+                aroudLocs.add(aroudLoc - width);
+              }
+              if (x + 1 < height) {
+                aroudLocs.add(aroudLoc + width);
+              }
+            }
+          }
           locs = locs.concat(...aroudLocs);
         }
         if (!gridFlag[loc]) {
