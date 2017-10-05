@@ -6,9 +6,14 @@ import styles from './GameTable.less';
 import Cell from './Cell';
 
 class GameTable extends Component {
-  state = { visible: false }
+  state = {
+    visible: false,
+    cellStyle: { height: 0, width: 0 },
+    bodyStyle: { height: 0, width: 0 },
+  }
   componentWillMount() {
-    this.timer = setTimeout(() => { this.setState({ visible: true }); }, 100);
+    setTimeout(() => { this.setState({ visible: true }); }, 100);
+    this.timer = setInterval(this.updateStyle, 100);
   }
   componentWillUnmount() {
     clearTimeout(this.timer);
@@ -46,29 +51,42 @@ class GameTable extends Component {
     }
     return grid;
   }
-  render() {
-    const containerInfo = this.context.body;
-    const padding = 100;
-    const { height, width, gridType, gridStatus, gridFlag } = this.props;
+  updateStyle = () => {
+    function compare(a, b) {
+      return a.height === b.height && a.width === b.width;
+    }
+    const { height, width } = this.props;
     // should limit height and width
-    const styleHeight = (containerInfo.height - 2 * padding) / height;
-    const styleWidth = (containerInfo.width - 2 * padding) / width;
+    const containerInfo = this.context.body;
+    const styleHeight = containerInfo.height / height;
+    const styleWidth = containerInfo.width / width;
     let squareSize = styleHeight > styleWidth ? styleWidth : styleHeight;
     if (isNaN(squareSize)) {
       squareSize = 30;
     }
-    const squareStyle = {
+    const cellStyle = {
       height: squareSize - 3,
       width: squareSize - 3,
     };
-    const Grid = this.getGird(gridType, gridStatus, gridFlag, squareStyle);
     const bodyStyle = {
-      height: height * squareSize + 30,
-      width: width * squareSize + 60,
+      height: squareSize * height,
+      width: squareSize * width,
+      padding: squareSize / 3,
     };
+    if (!compare(this.state.cellStyle, cellStyle)) {
+      this.setState({ cellStyle, bodyStyle });
+    }
+  }
+  render() {
+    const { gridType, gridStatus, gridFlag } = this.props;
+    const { cellStyle, bodyStyle } = this.state;
+    const Grid = this.getGird(gridType, gridStatus, gridFlag, cellStyle);
     return (
-      <div className={styles.body} style={bodyStyle} onContextMenu={(e)=>(e.preventDefault())}>
-        { this.state.visible ? Grid : null }
+      <div>
+        { this.state.visible ?
+        <div className={styles.body} style={bodyStyle} onContextMenu={(e)=>(e.preventDefault())}>
+         { Grid }
+        </div> : null }
       </div>
     );
   }
