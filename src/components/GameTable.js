@@ -82,7 +82,7 @@ class GameTable extends Component {
     const { cellStyle, bodyStyle } = this.state;
     const Grid = this.getGird(gridType, gridStatus, gridFlag, cellStyle);
     return (
-      <div>
+      <div style={{ userSelect: 'none' }}>
         { this.state.visible ?
         <div className={styles.body} style={bodyStyle} onContextMenu={(e)=>(e.preventDefault())}>
          { Grid }

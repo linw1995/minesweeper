@@ -34,8 +34,8 @@ class Cell extends Component {
         onClick={onLeftClick}
         onContextMenu={onRightClick}
       >
-        { cellIcon ? <img key="cellIcon" src={cellIcon} className={styles.icon} /> : null }
-        { flag ? <img key="flagIcon" src={flagIcon} className={styles.flag} /> : null }
+        { cellIcon ? <img key="cellIcon" src={cellIcon} className={styles.icon} style={{ pointerEvents: 'none' }} /> : null }
+        { flag ? <img key="flagIcon" src={flagIcon} className={styles.flag} style={{ pointerEvents: 'none' }} /> : null }
       </div>
     );
   }
