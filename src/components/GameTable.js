@@ -8,6 +8,7 @@ import Cell from './Cell';
 class GameTable extends Component {
   state = {
     visible: false,
+    gapWidth: 0,
     cellStyle: { height: 0, width: 0 },
     bodyStyle: { height: 0, width: 0 },
   }
@@ -21,12 +22,18 @@ class GameTable extends Component {
   getGird(gridType, gridStatus, gridFlag, cellStyle) {
     const grid = [];
     const { height, width } = this.props;
-    const onLeftClick = (i, j) => (() => {
-      this.props.clickOnLoc(i * width + j);
+    const { gapWidth } = this.state;
+    const onLeftClick = (i, j) => ((e) => {
+      e.preventDefault();
+      this.props.leftClickOnLoc(i * width + j);
     });
     const onRightClick = (i, j) => ((e) => {
       e.preventDefault();
       this.props.rightClickOnLoc(i * width + j);
+    });
+    const onBothClick = (i, j) => ((e) => {
+      e.preventDefault();
+      this.props.bothClickOnLoc(i * width + j);
     });
     for (let i = 0; i < height; i += 1) {
       const cells = [];
@@ -34,16 +41,24 @@ class GameTable extends Component {
         const type = gridType[i * width + j];
         const shown = gridStatus[i * width + j];
         const flag = gridFlag[i * width + j];
+        const style = { ...cellStyle };
+        if (j !== width - 1) {
+          style.marginRight = gapWidth;
+        }
+        if (i !== height -1) {
+          style.marginBottom = gapWidth + 1;
+        }
         cells.push(
           <Cell
             key={j}
             className={styles.cell}
-            style={cellStyle}
+            style={style}
             cellType={type}
             shown={shown}
             flag={flag}
             onLeftClick={onLeftClick(i, j)}
             onRightClick={onRightClick(i, j)}
+            onBothClick={onBothClick(i, j)}
           />
         );
       }
@@ -73,13 +88,14 @@ class GameTable extends Component {
       width: squareSize * width,
       padding: squareSize / 3,
     };
+    const gapWidth = squareSize / 10;
     if (!compare(this.state.cellStyle, cellStyle)) {
-      this.setState({ cellStyle, bodyStyle });
+      this.setState({ cellStyle, bodyStyle, gapWidth });
     }
   }
   render() {
     const { gridType, gridStatus, gridFlag } = this.props;
-    const { cellStyle, bodyStyle } = this.state;
+    const { cellStyle, bodyStyle} = this.state;
     const Grid = this.getGird(gridType, gridStatus, gridFlag, cellStyle);
     return (
       <div style={{ userSelect: 'none' }}>
@@ -94,8 +110,9 @@ class GameTable extends Component {
 
 GameTable.propTypes = {
   // dispatch
-  clickOnLoc: PropTypes.func.isRequired,
+  leftClickOnLoc: PropTypes.func.isRequired,
   rightClickOnLoc: PropTypes.func.isRequired,
+  bothClickOnLoc: PropTypes.func.isRequired,
   // state
   height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,
@@ -124,11 +141,14 @@ function MapStateToProps(state) {
 
 function MapDispatchToProps(dispatch) {
   return {
-    clickOnLoc: (loc) => {
-      dispatch({ type: 'GRID/CLICK_ON_LOC', payload: { loc, updatedAt: Date.now() } });
+    leftClickOnLoc: (loc) => {
+      dispatch({ type: 'GRID/LEFT_CLICK_ON_LOC', payload: { loc, updatedAt: Date.now() } });
     },
     rightClickOnLoc: (loc) => {
       dispatch({ type: 'GRID/RIGHT_CLICK_ON_LOC', payload: { loc, updatedAt: Date.now() } });
+    },
+    bothClickOnLoc: (loc) => {
+      dispatch({ type: 'GRID/BOTH_CLICK_ON_LOC', payload: { loc, updatedAt: Date.now() }});
     },
   };
 }

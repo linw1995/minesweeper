@@ -1,29 +1,83 @@
-function randInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min;
-}
+import { randInt, getAroudLocs } from '../utils/funcs';
 
-function getAroudLoc(loc, height, width) {
-  /*
-   *  [ ][ ][ ]
-   *  [ ][X][ ]
-   *  [ ][ ][ ]
-   */
-  const getloc = (x, y) => (x * width + y);
-  const rv = [];
-  const x = Math.floor(loc / width);
-  const y = loc % width;
-  for (const i of [-1, 0, 1]) {
-    for (const j of [-1, 0, 1]) {
-      const _x = x + i;
-      const _y = y + j;
-      if (0 <= _x && _x < height && 0 <= _y && _y < width) {
-        rv.push(getloc(_x, _y));
+function clickOnLocs(locs, width, height, gridStatus, gridFlag, gridType) {
+  const seen = new Set();
+  while (locs.length > 0) {
+    const loc = locs.pop();
+    if (seen.has(loc)) { continue; }
+    seen.add(loc);
+    if (gridType[loc] === 9 && !gridFlag[loc]) {
+      // click the mine, flaged cell is unclickable
+      // show all the cell
+      for (let i = 0; i < gridStatus.length; i += 1) {
+        gridStatus[i] = true;
       }
+      break;
+    } else if (gridType[loc] === 0 && !gridStatus[loc] && !gridFlag[loc]) {
+      // click the blank cell, flaged cell and shown cell is not spreadable
+      const aroudLocs = new Set();
+      const x = Math.floor(loc / width);
+      const y = loc % width;
+      // top
+      if (x - 1 >= 0) {
+        const aroudLoc = (x - 1) * width + y;
+        if (!gridStatus[aroudLoc]) {
+          aroudLocs.add(aroudLoc);
+          if (y - 1 >= 0) {
+            aroudLocs.add(aroudLoc - 1);
+          }
+          if (y + 1 < width) {
+            aroudLocs.add(aroudLoc + 1);
+          }
+        }
+      }
+      // left
+      if (y + 1 < width) {
+        const aroudLoc = x * width + y + 1;
+        if (!gridStatus[aroudLoc]) {
+          aroudLocs.add(aroudLoc);
+          if (x - 1 >= 0) {
+            aroudLocs.add(aroudLoc - width);
+          }
+          if (x + 1 < height) {
+            aroudLocs.add(aroudLoc + width);
+          }
+        }
+      }
+      // bottom
+      if (x + 1 < height) {
+        const aroudLoc = (x + 1) * width + y;
+        if (!gridStatus[aroudLoc]) {
+          aroudLocs.add(aroudLoc);
+          if (y - 1 >= 0) {
+            aroudLocs.add(aroudLoc - 1);
+          }
+          if (y + 1 < width) {
+            aroudLocs.add(aroudLoc + 1);
+          }
+        }
+      }
+      // left
+      if (y - 1 >= 0) {
+        const aroudLoc = x * width + y - 1;
+        if (!gridStatus[aroudLoc]) {
+          aroudLocs.add(aroudLoc);
+          if (x - 1 >= 0) {
+            aroudLocs.add(aroudLoc - width);
+          }
+          if (x + 1 < height) {
+            aroudLocs.add(aroudLoc + width);
+          }
+        }
+      }
+      locs = locs.concat(...aroudLocs);
+    }
+    if (!gridFlag[loc]) {
+      // flaged cell is unclickable
+      gridStatus[loc] = true;
     }
   }
-  return rv;
+  return gridStatus;
 }
 
 export default {
@@ -67,7 +121,7 @@ export default {
         if (gridType[loc] !== 9) {
           gridType[loc] = 9;
           // incress the mineCount of cell aroud mine
-          for (const aroudLoc of getAroudLoc(loc, height, width)) {
+          for (const aroudLoc of getAroudLocs(loc, height, width)) {
             if (gridType[aroudLoc] !== 9) gridType[aroudLoc] += 1;
           }
           count -= 1;
@@ -80,92 +134,19 @@ export default {
       }
       return { ...state, gridStatus, gridType, gridFlag, height, width, minesCount, status: 0, updatedAt, startedAt: 'null' };
     },
-    CLICK_ON_LOC(state, action) {
+    LEFT_CLICK_ON_LOC(state, action) {
       const { loc, updatedAt } = action.payload;
-      const { gridStatus, gridType, gridFlag, height, width, minesCount } = state;
-      let locs = [];
+      const { gridType, gridFlag, height, width, minesCount } = state;
+      let gridStatus = [...state.gridStatus];
+      let locs = [loc];
       let status = state.status;
       if (status === 1 || status === 2) {
         // when win or lose diasble the cell clickable
         return state;
       }
-      const seen = new Set();
-      locs.push(loc);
-      while (locs.length > 0) {
-        const loc = locs.pop();
-        if (seen.has(loc)) { continue; }
-        seen.add(loc);
-        if (gridType[loc] === 9 && !gridFlag[loc]) {
-          // click the mine, flaged cell is unclickable
-          // show all the cell
-          for (let i = 0; i < gridStatus.length; i += 1) {
-            gridStatus[i] = true;
-          }
-          break;
-        } else if (gridType[loc] === 0 && !gridStatus[loc] && !gridFlag[loc]) {
-          // click the blank cell, flaged cell and shown cell is not spreadable
-          const aroudLocs = new Set();
-          const x = Math.floor(loc / width);
-          const y = loc % width;
-          // top
-          if (x - 1 >= 0) {
-            const aroudLoc = (x - 1) * width + y;
-            if (!gridStatus[aroudLoc]) {
-              aroudLocs.add(aroudLoc);
-              if (y - 1 >= 0) {
-                aroudLocs.add(aroudLoc - 1);
-              }
-              if (y + 1 < width) {
-                aroudLocs.add(aroudLoc + 1);
-              }
-            }
-          }
-          // left
-          if (y + 1 < width) {
-            const aroudLoc = x * width + y + 1;
-            if (!gridStatus[aroudLoc]) {
-              aroudLocs.add(aroudLoc);
-              if (x - 1 >= 0) {
-                aroudLocs.add(aroudLoc - width);
-              }
-              if (x + 1 < height) {
-                aroudLocs.add(aroudLoc + width);
-              }
-            }
-          }
-          // bottom
-          if (x + 1 < height) {
-            const aroudLoc = (x + 1) * width + y;
-            if (!gridStatus[aroudLoc]) {
-              aroudLocs.add(aroudLoc);
-              if (y - 1 >= 0) {
-                aroudLocs.add(aroudLoc - 1);
-              }
-              if (y + 1 < width) {
-                aroudLocs.add(aroudLoc + 1);
-              }
-            }
-          }
-          // left
-          if (y - 1 >= 0) {
-            const aroudLoc = x * width + y - 1;
-            if (!gridStatus[aroudLoc]) {
-              aroudLocs.add(aroudLoc);
-              if (x - 1 >= 0) {
-                aroudLocs.add(aroudLoc - width);
-              }
-              if (x + 1 < height) {
-                aroudLocs.add(aroudLoc + width);
-              }
-            }
-          }
-          locs = locs.concat(...aroudLocs);
-        }
-        if (!gridFlag[loc]) {
-          // flaged cell is unclickable
-          gridStatus[loc] = true;
-        }
-      }
+
+      gridStatus = clickOnLocs(locs, width, height, gridStatus, gridFlag, gridType);
+
       let counter = 0;
       gridStatus.forEach((status) => {
         if (!status) counter += 1;
@@ -210,6 +191,45 @@ export default {
       } else {
         return { ...state, gridFlag, flagCount, updatedAt };
       }
+    },
+    BOTH_CLICK_ON_LOC(state, action) {
+      const { loc, updatedAt } = action.payload;
+      const { gridType, gridFlag, minesCount, height, width } = state;
+      let gridStatus = [...state.gridStatus];
+      let status = state.status;
+      if (status === 1 || status === 2) {
+        // when win or lose diasble the cell clickable
+        return state;
+      }
+      if (!gridStatus[loc]) {
+        // the target cell should be shown
+        return state;
+      }
+      const aroudMinesCount = gridType[loc];
+      const aroudLocs = getAroudLocs(loc, height, width);
+      let flagAroudMinesCount = 0;
+      for (const aroudLoc of aroudLocs) {
+        if (gridFlag[aroudLoc]) {
+          flagAroudMinesCount += 1;
+        }
+      }
+      if (aroudMinesCount === flagAroudMinesCount) {
+        // show all the cell around the loc
+        gridStatus = clickOnLocs(aroudLocs, width, height, gridStatus, gridFlag, gridType);
+      }
+
+      let counter = 0;
+      gridStatus.forEach((status) => {
+        if (!status) counter += 1;
+      });
+      if (counter === 0) {
+        // lose
+        status = 2;
+      } else if (counter === minesCount) {
+        // win
+        status = 1;
+      }
+      return { ...state, status, gridStatus, updatedAt };
     },
   },
   effects: {},
